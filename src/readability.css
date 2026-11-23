@@ -1,0 +1,9 @@
+/* Windows: system fonts avoid a font download on the first view. */
+:root{font-family:'Segoe UI','Yu Gothic UI','Meiryo',sans-serif;font-size:16px}
+.side-label,.history-item small,.profile small,.breadcrumb,.source-status,.eyebrow,.badge,.company-meta,.muted,.chart-legend,.sample-notice,.table-footer,.table-footer button,footer,.form-help,.period-select select{font-size:12px}
+.nav-current,.history-item strong,.sidebar-bottom>button,.profile strong,.search input,.top-actions,.top-actions button,.export,.tabline nav button,.kpi-label,.card-heading h2,.segmented button,table,.connection-row span{font-size:14px}
+.kpi-value small,.kpi-bottom,.kpi-bottom em,.kpi-bottom>.muted,thead{font-size:12px}
+.chart-legend{gap:14px}.search input{font-size:12px}.history-item strong{max-width:150px}.statement-heading{gap:16px}.segmented button{padding:6px 9px}.kpi-bottom .muted{white-space:normal}.kpi-bottom .spark{flex-shrink:0}.settings-help,.error,.pdf-empty p{font-size:14px}
+@media(min-width:1151px) and (max-height:1100px){.content{padding-top:22px}.chart{height:175px}.chart-card{padding-top:17px;padding-bottom:15px}.kpi{padding-top:14px;padding-bottom:12px}.kpi-grid{margin-top:14px}.chart-grid,.statement-card{margin-top:18px}.company-meta{margin-top:10px}.tabline{margin-top:14px}.sample-notice{margin:10px 0}th,td{padding-top:12px;padding-bottom:12px}}
+@media(max-width:1150px){.kpi-grid{gap:12px}.spark{display:none}.chart-legend{gap:9px}.statement-heading{gap:10px}.segmented button{font-size:12px}.export{font-size:12px}}
+@media(max-width:900px){.sidebar-bottom>button{font-size:0}.kpi-bottom>.muted{font-size:12px}}

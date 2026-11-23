@@ -1,0 +1,9 @@
+import test from'node:test';import assert from'node:assert/strict';import{SignJWT}from'jose';import worker from'../server/worker.mjs';
+const origin='https://example.test';const env={SESSION_SECRET:'test-only-secret-not-for-production-123456789'};
+const request=(path,options={})=>new Request(origin+path,options);
+test('unconfigured status is explicit',async()=>{const r=await worker.fetch(request('/api/config'),{});assert.deepEqual(await r.json(),{google:false,edinet:false,storage:false})});
+test('history and PDFs require authentication',async()=>{for(const path of ['/api/analyses','/api/analyses/aaaa/pdf'])assert.equal((await worker.fetch(request(path),env)).status,401)});
+test('cross-origin mutation is rejected',async()=>assert.equal((await worker.fetch(request('/api/analyze',{method:'POST',headers:{Origin:'https://evil.test'}}),env)).status,403));
+test('tampered session rejected',async()=>assert.equal((await worker.fetch(request('/api/analyses',{headers:{Cookie:'fl_session=fake'}}),env)).status,401));
+test('OAuth configuration and invalid callback do not authenticate',async()=>{assert.equal((await worker.fetch(request('/auth/google'),{})).status,503);const r=await worker.fetch(request('/auth/callback?code=invalid&state=invalid'),env);assert.equal(r.status,302);assert.equal(r.headers.get('location'),'/?auth_error=1')});
+test('PDF queries bind the authenticated owner',async()=>{const token=await new SignJWT({kind:'session',sub:'alice'}).setProtectedHeader({alg:'HS256'}).setExpirationTime('5m').sign(new TextEncoder().encode(env.SESSION_SECRET));let bindings;const DB={prepare:()=>({bind:(...args)=>{bindings=args;return{first:async()=>null}}})};const r=await worker.fetch(request('/api/analyses/aaaa/pdf',{headers:{Cookie:`fl_session=${token}`}}),{...env,DB,BUCKET:{}});assert.equal(r.status,404);assert.deepEqual(bindings,['aaaa','alice'])});

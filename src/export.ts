@@ -1,0 +1,11 @@
+import ExcelJS from 'exceljs';
+import {Analysis, fields,ratio} from './data';
+export async function workbook(a:Analysis){
+ const book=new ExcelJS.Workbook();book.creator='Financial Lens';book.created=new Date();
+ const info=book.addWorksheet('出典・条件');info.addRows([['企業',a.name],['証券コード',a.code],['区分',a.sample?'架空サンプル・投資判断に利用不可':'EDINET'],['決算期',a.period],['単位','百万円（比率は%）'],['会計基準・範囲',a.basis],['書類ID',a.docId||'サンプル'],['作成日時',a.createdAt],['ROE','当期純利益 ÷ 期首期末平均自己資本 × 100'],['欠損値','空欄。取得できない値をゼロで補完しません。'],...(a.warnings||[]).map(w=>['注意',w]),...Object.entries(a.sources||{}).map(([k,v])=>[fields[k]||k,v])]);
+ for(const [name,keys] of [['損益計算書',['revenue','operating','net']],['貸借対照表',['assets','equity','liabilities','currentAssets','currentLiabilities','cash']],['キャッシュフロー',['ocf','icf','fcf']]] as [string,string[]][]){const sheet=book.addWorksheet(name);sheet.addRow(['項目（百万円）',...a.years.map(y=>y.year)]);for(const k of keys)sheet.addRow([fields[k],...a.years.map(y=>(y as any)[k])]);}
+ const s=book.addWorksheet('分析指標');s.addRow(['指標（%）',...a.years.map(y=>y.year)]);s.addRow(['営業利益率',...a.years.map(y=>ratio(y.operating,y.revenue))]);s.addRow(['自己資本比率',...a.years.map(y=>ratio(y.equity,y.assets))]);s.addRow(['流動比率',...a.years.map(y=>ratio(y.currentAssets,y.currentLiabilities))]);s.addRow(['ROE',...a.years.map((y,i)=>ratio(y.net,i&&a.years[i-1].equity!=null&&y.equity!=null?(a.years[i-1].equity!+y.equity)/2:null))]);
+ book.eachSheet(sheet=>{sheet.views=[{state:'frozen',ySplit:1,xSplit:1}];sheet.columns.forEach((c,i)=>{c.width=i===0?32:23});sheet.getRow(1).eachCell(c=>{c.font={bold:true,color:{argb:'FFFFFFFF'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF3468CE'}}});sheet.eachRow((row,i)=>{if(i>1)row.eachCell(c=>{if(typeof c.value==='number')c.numFmt='#,##0.00;[Red](#,##0.00)';c.alignment={vertical:'middle'};});row.height=25;});});
+ return book.xlsx.writeBuffer();
+}
+export async function download(a:Analysis){const data=await workbook(a);const url=URL.createObjectURL(new Blob([data],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const link=document.createElement('a');link.href=url;link.download=`${a.code}_${a.period}${a.sample?'_サンプル':''}.xlsx`;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
